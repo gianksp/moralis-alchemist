@@ -2,6 +2,7 @@ const express = require('express')
 const axios = require('axios')
 const cors = require('cors')
 const app = express()
+const { exec } = require("child_process");
 
 app.use(cors())
 
@@ -59,6 +60,37 @@ app.get('/forward', (req, res) => {
       res.send(error)
     });
     
+});
+
+app.get('/contract', (req, res) => {
+    
+  // Extract mandatory query params
+  const params = req.query
+  const contractAddress = params.address
+  const func = params.func
+  const isCall = params.isCall
+  
+  // if query para includes isCall then it will attempt to sign
+  const commandType = isCall ? 'call' : 'query'
+  // Only used for signing
+  const callCmdParams = isCall ? '--pem="hyperfabric.pem" --gas-limit=2000000  --recall-nonce --send' : ''
+
+  const cmd = `erdpy --verbose contract ${commandType} ${contractAddress} --function="${func}" --proxy="https://testnet-api.elrond.com" ${callCmdParams}`
+  console.log(`Invoking ${cmd}`)
+  exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+          console.log(`error: ${error.message}`);
+          res.send(error.message)
+          return;
+      }
+      if (stderr) {
+          console.log(`stderr: ${stderr}`);
+          res.send(stderr)
+          return;
+      }
+      console.log(`stdout: ${stdout}`);
+      res.send(stdout)
+  });
 });
 
 app.listen(PORT, HOST)
