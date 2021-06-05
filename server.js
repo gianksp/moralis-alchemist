@@ -27,15 +27,7 @@ const HOST = '0.0.0.0'
 app.get('/forward', (req, res) => {
     
     // Extract mandatory query params
-    const params = req.query
-    const applicationId = params.appId
-    const subdomain = params.subdomain
-    const func = params.func
-    
-    // Sanitize request params
-    delete params.appId
-    delete params.subdomain
-    delete params.fun
+    const { applicationId, subdomain, func, ...params } = req.query
 
     // Build remaining query params into forwarded request
     const queryString = Object.keys(params).map(key => key + '=' + params[key]).join('&')
